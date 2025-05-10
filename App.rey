@@ -1,0 +1,133 @@
+import { useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Calendar } from "@/components/ui/calendar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+const days = ["شنبه", "یک‌شنبه", "دوشنبه", "سه‌شنبه", "چهارشنبه", "پنج‌شنبه", "جمعه"];
+const hours = Array.from({ length: 12 }, (_, i) => `${i + 8}:00`);
+
+export default function PlannerApp() {
+  const [tasks, setTasks] = useState([]);
+  const [task, setTask] = useState("");
+  const [priority, setPriority] = useState("متوسط");
+  const [comment, setComment] = useState("");
+
+  const addTask = () => {
+    const newTask = {
+      text: task,
+      priority,
+      comment,
+      done: false,
+      day: "شنبه",
+      hour: "10:00"
+    };
+    setTasks([...tasks, newTask]);
+    setTask("");
+    setComment("");
+  };
+
+  const toggleDone = (index) => {
+    const updated = [...tasks];
+    updated[index].done = !updated[index].done;
+    setTasks(updated);
+  };
+
+  const getColor = (task) => {
+    if (task.done) return "bg-green-200";
+    if (task.priority === "زیاد") return "bg-red-200";
+    if (task.priority === "کم") return "bg-blue-100";
+    return "bg-yellow-100";
+  };
+
+  return (
+    <div className="p-4 max-w-[1000px] mx-auto">
+      <Tabs defaultValue="week">
+        <TabsList className="grid grid-cols-3">
+          <TabsTrigger value="week">هفتگی</TabsTrigger>
+          <TabsTrigger value="month">ماهانه</TabsTrigger>
+          <TabsTrigger value="checklist">چک‌لیست</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="checklist">
+          <Card className="mb-4">
+            <CardContent className="space-y-2 p-4">
+              <Input
+                placeholder="نام کار..."
+                value={task}
+                onChange={(e) => setTask(e.target.value)}
+              />
+              <Textarea
+                placeholder="یادداشت..."
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+              />
+              <select
+                className="w-full border rounded p-2"
+                value={priority}
+                onChange={(e) => setPriority(e.target.value)}
+              >
+                <option value="زیاد">اولویت زیاد</option>
+                <option value="متوسط">اولویت متوسط</option>
+                <option value="کم">اولویت کم</option>
+              </select>
+              <Button onClick={addTask}>افزودن</Button>
+            </CardContent>
+          </Card>
+
+          <div className="space-y-2">
+            {tasks.map((t, i) => (
+              <div
+                key={i}
+                className={`p-2 rounded ${getColor(t)} flex justify-between items-center`}
+              >
+                <span>{t.text}</span>
+                <Button variant="outline" onClick={() => toggleDone(i)}>
+                  {t.done ? "انجام شد" : "انجام نشده"}
+                </Button>
+              </div>
+            ))}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="week">
+          <div className="grid grid-cols-8 gap-1">
+            <div></div>
+            {days.map((day, i) => (
+              <div key={i} className="text-center font-bold">
+                {day}
+              </div>
+            ))}
+            {hours.map((hour, row) => (
+              <>
+                <div className="text-sm font-semibold flex items-center justify-center">
+                  {hour}
+                </div>
+                {days.map((day, col) => {
+                  const task = tasks.find((t) => t.day === day && t.hour === hour);
+                  return (
+                    <div
+                      key={`${row}-${col}`}
+                      className={`h-16 border rounded p-1 text-xs overflow-hidden ${
+                        task ? getColor(task) : ""
+                      }`}
+                      title={task?.comment || ""}
+                    >
+                      {task?.text || ""}
+                    </div>
+                  );
+                })}
+              </>
+            ))}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="month">
+          <Calendar className="rounded-md border" />
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
